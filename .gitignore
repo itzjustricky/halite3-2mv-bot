@@ -1,5 +1,7 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
+*.pyc
+*.pyo
 *.py[cod]
 *$py.class
 
@@ -102,3 +104,11 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+Makefile
+
+# Halite specific files
+*.hlt
+*.class
+*.ipr
+*.iws
