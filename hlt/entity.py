@@ -9,7 +9,7 @@ class Entity(abc.ABC):
     """
     Base Entity Class from whence Ships, Dropoffs and Shipyards inherit
     """
-    def __init__(self, owner, id, position):
+    def __init__(self, owner: int, id: int, position: Position):
         self.owner = owner
         self.id = id
         self.position = position
