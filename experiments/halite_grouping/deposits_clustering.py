@@ -3,7 +3,7 @@
 Test segmentation methodologies
 """
 
-import logging
+# import logging
 # import itertools
 import functools
 
@@ -51,13 +51,23 @@ def main():
     #     format="%(asctime)s:%(levelname)s:%(message)s",
     # )
 
-    map_shape = Shape(*SAMPLE_HALITE_MAP.shape)
-    rectangle_shape = Shape(2, 2)
+    # map_shape = Shape(*SAMPLE_HALITE_MAP.shape)
+    rectangle_shape = Shape(1, 1)
 
     ms_cluster = mean_shift.MeanShiftCluster(rectangle_shape)
     point_groupings = ms_cluster.group_grid(SAMPLE_HALITE_MAP)
-
     print("There are {} number of groups formed.".format(len(point_groupings)))
+
+    keep_threshold = 0.05
+    to_delete_points = []
+    for mode_point, points in point_groupings.items():
+        point_score = mean_shift.points_score(mode_point, SAMPLE_HALITE_MAP)
+        if point_score < keep_threshold:
+            print("Will pop group with mode point {} because of score {} < {}"
+                  .format(mode_point, point_score, keep_threshold))
+            to_delete_points.append(mode_point)
+
+    for mode_point in to_delete_points: point_groupings.pop(mode_point)
 
     fig = plt.figure()
     ax = fig.add_subplot(111)

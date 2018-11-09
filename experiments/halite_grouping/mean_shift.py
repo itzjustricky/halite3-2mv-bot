@@ -64,7 +64,7 @@ class MeanShiftCluster(object):
             _logger.info("With start point {}, found mode point {}."
                          .format(point, mode_point))
 
-            mode_point_neighbors = list(
+            mode_point_neighbors = [point] + list(
                 generate_region_points(
                     mode_point,
                     rectangle_shape=self.rectangle_shape,
@@ -74,6 +74,9 @@ class MeanShiftCluster(object):
                 if tmp_point not in set_points:
                     set_points.add(tmp_point)
                     grouped_points.setdefault(mode_point, []).append(tmp_point)
+                else:
+                    _logger.info("Skipping point {} because it was already set."
+                                 .format(tmp_point))
 
         return grouped_points
 
@@ -173,6 +176,24 @@ def generate_region_points(
     for x, y in x_y_generator:
         _logger.info("Generating Point(x={}, y={})".format(x, y))
         yield Point(x, y)
+
+
+def points_score(
+        point: Point, X: np.ndarray,
+        rectangle_shape: Union[Shape, None]=None):
+    """ Calculate the score associated with a point """
+
+    if rectangle_shape is None:
+        rectangle_shape = Shape(1, 1)
+
+    matrix_shape = Shape(*X.shape)
+    region_points = list(generate_region_points(
+        point, rectangle_shape, map_shape=matrix_shape))
+
+    score = sum([
+        X[point.y][point.x]
+        for point in region_points]) / len(region_points)
+    return score
 
 
 if __name__ == "__main__":
