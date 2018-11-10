@@ -3,8 +3,8 @@
 Test segmentation methodologies
 """
 
-# import logging
-# import itertools
+import logging
+import argparse
 import functools
 
 from typing import List
@@ -16,12 +16,8 @@ import mean_shift
 from mean_shift import Point
 from mean_shift import Shape
 
-# from mean_shift import MeanShiftCluster
 
-# from sklearn.preprocessing import normalize
-
-# from sklearn.cluster import DBSCAN
-# from sklearn.cluster import AffinityPropagation
+_logger = logging.getLogger("deposit_clustering")
 
 
 SAMPLE_HALITE_MAP = np.array([
@@ -45,26 +41,39 @@ SEQUENTIAL_CMAPS = [
     'GnBu', 'PuBu', 'YlGnBu', 'PuBuGn', 'BuGn', 'YlGn']
 
 
-def main():
-    # logging.basicConfig(
-    #     level=logging.INFO,
-    #     format="%(asctime)s:%(levelname)s:%(message)s",
-    # )
+def get_args(args=None):
+    parser = argparse.ArgumentParser()
 
-    # map_shape = Shape(*SAMPLE_HALITE_MAP.shape)
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Argument flag to determine whether or not to set "
+             "logging configuration to debug.")
+    return vars(parser.parse_args(args))
+
+
+def main():
+
+    parsed_args = get_args()
+    log_level = logging.DEBUG if parsed_args["debug"] else logging.INFO
+    logging.basicConfig(
+        level=log_level,
+        format='%(asctime)s %(levelname)s %(message)s')
+
+    # this is a hardcoded hyper-parameter
     rectangle_shape = Shape(1, 1)
 
     ms_cluster = mean_shift.MeanShiftCluster(rectangle_shape)
     point_groupings = ms_cluster.group_grid(SAMPLE_HALITE_MAP)
-    print("There are {} number of groups formed.".format(len(point_groupings)))
+    _logger.info("There are {} number of groups formed.".format(len(point_groupings)))
 
     keep_threshold = 0.05
     to_delete_points = []
     for mode_point, points in point_groupings.items():
         point_score = mean_shift.points_score(mode_point, SAMPLE_HALITE_MAP)
         if point_score < keep_threshold:
-            print("Will pop group with mode point {} because of score {} < {}"
-                  .format(mode_point, point_score, keep_threshold))
+            _logger.debug("Will pop group with mode point {} because of score {} < {}"
+                          .format(mode_point, point_score, keep_threshold))
             to_delete_points.append(mode_point)
 
     for mode_point in to_delete_points: point_groupings.pop(mode_point)
@@ -74,14 +83,9 @@ def main():
 
     plot_map(SAMPLE_HALITE_MAP)
     for ind, (mode_point, points) in enumerate(point_groupings.items()):
+        _logger.info("Group with mode point: {} (has {} members) is labeled '{}'."
+                     .format(mode_point, len(points), ind))
 
-        print("Group with mode point: {} (has {} members) is labeled '{}'."
-              .format(mode_point, len(points), ind))
-
-        # print("Group with mode point: {} has color '{}'."
-        #       .format(mode_point, color_map))
-        # region_matrix = matrix_from_points(points, map_shape)
-        # plot_map(region_matrix, color_map=color_map, alpha=0.6)
         label_points(str(ind), points, ax)
 
     plt.show()
